@@ -223,3 +223,19 @@
       </form>
     </mat-card-content>
   </mat-card>
+
+
+  <mat-card style="flex: 1; margin-left: 20px;">
+    <mat-card-title>Mount Paths</mat-card-title>
+    <mat-card-content>
+      <mat-list>
+        <mat-list-item
+          *ngFor="let mountPath of mountPathsFormArray.controls; let i = index"
+          (click)="remove(i)"
+          style="cursor: pointer;"
+        >
+          {{ mountPath.value }}
+        </mat-list-item>
+      </mat-list>
+    </mat-card-content>
+  </mat-card>
