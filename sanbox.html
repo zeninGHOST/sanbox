@@ -204,3 +204,22 @@
         </form>
     </mat-card-content>
   </mat-card>
+
+
+  <mat-card>
+    <mat-card-title>Application Configuration</mat-card-title>
+    <mat-card-content>
+      <form [formGroup]="appForm" (ngSubmit)="onSubmit()">
+        <mat-form-field appearance="outline">
+          <mat-label>Threshold</mat-label>
+          <input matInput formControlName="threshold" />
+          <mat-error *ngIf="appForm.get('threshold')?.hasError('required')">
+            Threshold is required.
+          </mat-error>
+          <mat-error *ngIf="appForm.get('threshold')?.hasError('min') || appForm.get('threshold')?.hasError('max')">
+            Threshold must be between 1 and 99.
+          </mat-error>
+        </mat-form-field>
+      </form>
+    </mat-card-content>
+  </mat-card>
