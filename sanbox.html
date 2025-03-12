@@ -239,3 +239,137 @@
       </mat-list>
     </mat-card-content>
   </mat-card>
+
+
+  <!-- Update #3 DYNAMIC Form field -->
+
+  <div style="display: flex;">
+    <mat-card style="flex: 2;">
+      <mat-card-title>Application Configuration</mat-card-title>
+      <mat-card-content>
+        <form [formGroup]="appForm" (ngSubmit)="onSubmit()">
+          <mat-form-field appearance="outline">
+            <mat-label>App ID</mat-label>
+            <input matInput formControlName="appId" />
+          </mat-form-field>
+  
+          <mat-form-field appearance="outline">
+            <mat-label>Environment Type</mat-label>
+            <mat-select formControlName="envType">
+              <mat-option *ngFor="let type of envTypes" [value]="type">
+                {{ type }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+  
+          <ng-container formArrayName="metrics">
+            <div *ngFor="let metric of metricsFormArray.controls; let i = index" [formGroupName]="i">
+              <mat-card style="margin-bottom: 20px;">
+                <mat-card-title>Metric {{ i + 1 }}</mat-card-title>
+                <mat-card-content>
+                  <mat-form-field appearance="outline">
+                    <mat-label>File System Type</mat-label>
+                    <mat-select formControlName="fileSystemType">
+                      <mat-option *ngFor="let type of fileSystemTypes" [value]="type">
+                        {{ type }}
+                      </mat-option>
+                    </mat-select>
+                  </mat-form-field>
+  
+                  <mat-form-field appearance="outline">
+                    <mat-label>Alert Type</mat-label>
+                    <mat-select formControlName="alertType">
+                      <mat-option *ngFor="let type of alertTypes" [value]="type">
+                        {{ type }}
+                      </mat-option>
+                    </mat-select>
+                  </mat-form-field>
+  
+                  <mat-form-field appearance="outline" *ngIf="metric.get('alertType')?.value === 'email'">
+                    <mat-label>Email</mat-label>
+                    <input matInput formControlName="email" />
+                  </mat-form-field>
+  
+                  <mat-form-field appearance="outline" *ngIf="metric.get('alertType')?.value === 'slack'">
+                    <mat-label>Slack Webhook</mat-label>
+                    <input matInput formControlName="webhook" formGroupName="slack" />
+                  </mat-form-field>
+  
+                  <mat-form-field appearance="outline">
+                    <mat-label>Condition</mat-label>
+                    <mat-select formControlName="condition">
+                      <mat-option *ngFor="let condition of conditions" [value]="condition">
+                        {{ condition }}
+                      </mat-option>
+                    </mat-select>
+                  </mat-form-field>
+  
+                  <mat-form-field appearance="outline">
+                    <mat-label>Threshold</mat-label>
+                    <input matInput formControlName="threshold" />
+                    <mat-error *ngIf="metric.get('threshold')?.hasError('required')">
+                      Threshold is required.
+                    </mat-error>
+                    <mat-error *ngIf="metric.get('threshold')?.hasError('min') || metric.get('threshold')?.hasError('max')">
+                      Threshold must be between 1 and 99.
+                    </mat-error>
+                  </mat-form-field>
+  
+                  <mat-form-field appearance="outline">
+                    <mat-label>Add Mount Paths</mat-label>
+                    <mat-chip-list #chipList aria-label="mount path selection">
+                      <input
+                        placeholder="New mount path..."
+                        #mountPathInput
+                        [matChipInputFor]="chipList"
+                        [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+                        (matChipInputTokenEnd)="add(i, $event)"
+                        [formControl]="mountPathInputControl"
+                      />
+                    </mat-chip-list>
+                    <mat-error *ngIf="metric.get('mountPaths')?.hasError('minOneMountPath')">
+                      At least one mount path is required.
+                    </mat-error>
+                  </mat-form-field>
+  
+                  <button mat-raised-button color="warn" type="button" (click)="removeMetric(i)">
+                    Remove Metric
+                  </button>
+                </mat-card-content>
+              </mat-card>
+            </div>
+          </ng-container>
+  
+          <button mat-raised-button color="primary" type="button" (click)="addMetric()">
+            Add Metric
+          </button>
+  
+          <button mat-raised-button color="primary" type="submit" [disabled]="loading">
+            Submit
+          </button>
+  
+          <mat-spinner *ngIf="loading"></mat-spinner>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  
+    <mat-card style="flex: 1; margin-left: 20px;">
+      <mat-card-title>Mount Paths</mat-card-title>
+      <mat-card-content>
+        <ng-container formArrayName="metrics">
+          <div *ngFor="let metric of metricsFormArray.controls; let i = index" [formGroupName]="i">
+            <mat-card-title>Metric {{ i + 1 }} Mount Paths</mat-card-title>
+            <mat-list>
+              <mat-list-item
+                *ngFor="let mountPath of metric.get('mountPaths')?.controls; let j = index"
+                (click)="remove(i, j)"
+                style="cursor: pointer;"
+              >
+                {{ mountPath.value }}
+              </mat-list-item>
+            </mat-list>
+          </div>
+        </ng-container>
+      </mat-card-content>
+    </mat-card>
+  </div>

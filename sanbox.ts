@@ -247,3 +247,166 @@ export class AppComponent {
     }
   }
 }
+
+
+//UPDATE #3 dynamic form field
+// app.component.ts
+import { Component } from '@angular/core';
+import {
+  FormBuilder,
+  FormGroup,
+  Validators,
+  FormArray,
+  FormControl,
+  ValidatorFn,
+  AbstractControl,
+} from '@angular/forms';
+import { AppService } from './app.service';
+import { MatChipInputEvent } from '@angular/material/chips';
+import { COMMA, ENTER } from '@angular/cdk/keycodes';
+import { delay } from 'rxjs/operators';
+import { of } from 'rxjs';
+
+interface AppFormData {
+  appId: string;
+  envType: string;
+  metrics: {
+    fileSystemType: string;
+    alertType: string;
+    email?: string;
+    slack?: string;
+    condition: string;
+    threshold: number;
+    mountPaths: string[];
+  }[];
+}
+
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.css'],
+})
+export class AppComponent {
+  appForm: FormGroup;
+  envTypes: string[] = ['dev', 'test', 'prod'];
+  alertTypes: string[] = ['email', 'slack'];
+  conditions: string[] = ['>', '<', '='];
+  loading = false;
+  mountPathInputControl = new FormControl('');
+
+  readonly separatorKeysCodes: number[] = [ENTER, COMMA];
+
+  constructor(private fb: FormBuilder, private appService: AppService) {
+    this.appForm = this.fb.group({
+      appId: ['', Validators.required],
+      envType: ['', Validators.required],
+      metrics: this.fb.array([]),
+    });
+  }
+
+  createMetricFormGroup(): FormGroup {
+    return this.fb.group({
+      fileSystemType: ['', Validators.required],
+      alertType: ['', Validators.required],
+      email: [''],
+      slack: this.fb.group({
+        webhook: [''],
+      }),
+      condition: ['', Validators.required],
+      threshold: [
+        '',
+        [Validators.required, Validators.min(1), Validators.max(99)],
+      ],
+      mountPaths: this.fb.array([], this.minOneMountPath),
+    });
+  }
+
+  addMetric(): void {
+    this.metricsFormArray.push(this.createMetricFormGroup());
+    this.metricsFormArray.controls[this.metricsFormArray.length - 1]
+      .get('alertType')
+      ?.valueChanges.subscribe((value) => {
+        this.updateValidators(this.metricsFormArray.controls[this.metricsFormArray.length - 1], value);
+      });
+    this.updateValidators(this.metricsFormArray.controls[this.metricsFormArray.length - 1], this.metricsFormArray.controls[this.metricsFormArray.length-1].get('alertType')?.value);
+  }
+
+  removeMetric(index: number): void {
+    this.metricsFormArray.removeAt(index);
+  }
+
+  get metricsFormArray() {
+    return this.appForm.get('metrics') as FormArray;
+  }
+
+  minOneMountPath: ValidatorFn = (control: AbstractControl): { [key: string]: any } | null => {
+    const array = control.get('mountPaths') as FormArray;
+    if (array.controls.length === 0) {
+      return { 'minOneMountPath': true };
+    }
+    return null;
+  };
+
+  updateValidators(metricGroup: FormGroup, alertType: string) {
+    const emailControl = metricGroup.get('email');
+    const slackControl = metricGroup.get('slack.webhook') as FormControl;
+
+    if (alertType === 'email') {
+      emailControl?.setValidators([Validators.required, Validators.email]);
+      slackControl.setValidators(null);
+    } else if (alertType === 'slack') {
+      emailControl?.setValidators(null);
+      slackControl.setValidators(Validators.required);
+    } else {
+      emailControl?.setValidators(null);
+      slackControl.setValidators(null);
+    }
+    emailControl?.updateValueAndValidity();
+    slackControl.updateValueAndValidity();
+  }
+
+  add(metricIndex: number, event: MatChipInputEvent): void {
+    const value = this.mountPathInputControl.value;
+    if ((value || '').trim()) {
+      (this.metricsFormArray.at(metricIndex).get('mountPaths') as FormArray).push(
+        this.fb.control(value.trim())
+      );
+      (this.metricsFormArray.at(metricIndex).get('mountPaths') as FormArray).updateValueAndValidity();
+    }
+    this.mountPathInputControl.reset();
+  }
+
+  remove(metricIndex: number, index: number): void {
+    (this.metricsFormArray.at(metricIndex).get('mountPaths') as FormArray).removeAt(index);
+    (this.metricsFormArray.at(metricIndex).get('mountPaths') as FormArray).updateValueAndValidity();
+  }
+
+  onSubmit() {
+    if (this.appForm.valid) {
+      this.loading = true;
+      const formData: AppFormData = this.appForm.value;
+
+      formData.metrics.forEach(metric => {
+        if (metric.alertType === 'email') {
+          delete metric.slack;
+        } else {
+          metric.slack = metric.slack?.webhook;
+        }
+      });
+
+      of(formData)
+        .pipe(delay(3000))
+        .subscribe(
+          (response) => {
+            console.log('Form submitted successfully:', response);
+            this.loading = false;
+            window.location.reload();
+          },
+          (error) => {
+            console.error('Error submitting form:', error);
+            this.loading = false;
+          }
+        );
+    }
+  }
+}
