@@ -410,3 +410,139 @@ export class AppComponent {
     }
   }
 }
+
+// update 4
+// app.component.ts
+import { Component } from '@angular/core';
+import {
+  FormBuilder,
+  FormGroup,
+  Validators,
+  FormArray,
+  FormControl,
+  ValidatorFn,
+  AbstractControl,
+} from '@angular/forms';
+import { AppService } from './app.service';
+import { MatChipInputEvent } from '@angular/material/chips';
+import { COMMA, ENTER } from '@angular/cdk/keycodes';
+import { delay } from 'rxjs/operators';
+import { of } from 'rxjs';
+
+interface AppFormData {
+  appId: string;
+  envType: string;
+  metrics: {
+    fileSystemType: string;
+    alertType: string;
+    email?: string;
+    slack?: string; // Changed to string
+    condition: string;
+    threshold: number;
+    mountPath: string;
+  }[];
+}
+
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.css'],
+})
+export class AppComponent {
+  appForm: FormGroup;
+  envTypes: string[] = ['dev', 'test', 'prod'];
+  fileSystemTypes: string[] = ['ext4', 'xfs', 'nfs'];
+  alertTypes: string[] = ['email', 'slack'];
+  conditions: string[] = ['>', '<', '='];
+  loading = false;
+  mountPathInputControl = new FormControl('');
+
+  readonly separatorKeysCodes: number[] = [ENTER, COMMA];
+
+  constructor(private fb: FormBuilder, private appService: AppService) {
+    this.appForm = this.fb.group({
+      appId: ['', Validators.required],
+      envType: ['', Validators.required],
+      metrics: this.fb.array([]),
+    });
+  }
+
+  createMetricFormGroup(): FormGroup {
+    return this.fb.group({
+      fileSystemType: ['', Validators.required],
+      alertType: ['', Validators.required],
+      email: [''],
+      slack: [''], // Changed to string
+      condition: ['', Validators.required],
+      threshold: [
+        '',
+        [Validators.required, Validators.min(1), Validators.max(99)],
+      ],
+      mountPath: ['', Validators.required],
+    });
+  }
+
+  addMetric(): void {
+    const newMetricGroup = this.createMetricFormGroup();
+    this.metricsFormArray.push(newMetricGroup);
+
+    newMetricGroup.get('alertType')?.valueChanges.subscribe((value) => {
+      this.updateValidators(newMetricGroup, value);
+    });
+
+    this.updateValidators(newMetricGroup, newMetricGroup.get('alertType')?.value);
+  }
+
+  removeMetric(index: number): void {
+    this.metricsFormArray.removeAt(index);
+  }
+
+  get metricsFormArray() {
+    return this.appForm.get('metrics') as FormArray;
+  }
+
+  updateValidators(metricGroup: FormGroup, alertType: string) {
+    const emailControl = metricGroup.get('email');
+    const slackControl = metricGroup.get('slack'); // Changed to string
+
+    if (alertType === 'email') {
+      emailControl?.setValidators([Validators.required, Validators.email]);
+      slackControl?.setValidators(null);
+    } else if (alertType === 'slack') {
+      emailControl?.setValidators(null);
+      slackControl?.setValidators(Validators.required);
+    } else {
+      emailControl?.setValidators(null);
+      slackControl?.setValidators(null);
+    }
+    emailControl?.updateValueAndValidity();
+    slackControl?.updateValueAndValidity();
+  }
+
+  onSubmit() {
+    if (this.appForm.valid) {
+      this.loading = true;
+      const formData: AppFormData = this.appForm.value;
+
+      formData.metrics.forEach(metric => {
+        if (metric.alertType === 'email') {
+          delete metric.slack;
+        }
+      });
+
+      of(formData)
+        .pipe(delay(3000))
+        .subscribe(
+          (response) => {
+            console.log('Form submitted successfully:', response);
+            this.loading = false;
+            window.location.reload();
+          },
+          (error) => {
+            console.error('Error submitting form:', error);
+            this.loading = false;
+          }
+        );
+    }
+  }
+}

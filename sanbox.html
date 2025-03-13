@@ -373,3 +373,98 @@
       </mat-card-content>
     </mat-card>
   </div>
+
+  <!-- update 4 -->
+  <div style="display: flex;">
+    <mat-card style="flex: 2;">
+      <mat-card-title>Application Configuration</mat-card-title>
+      <mat-card-content>
+        <form [formGroup]="appForm" (ngSubmit)="onSubmit()">
+          <mat-form-field appearance="outline">
+            <mat-label>App ID</mat-label>
+            <input matInput formControlName="appId" />
+          </mat-form-field>
+  
+          <mat-form-field appearance="outline">
+            <mat-label>Environment Type</mat-label>
+            <mat-select formControlName="envType">
+              <mat-option *ngFor="let type of envTypes" [value]="type">
+                {{ type }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+  
+          <ng-container formArrayName="metrics">
+            <div *ngFor="let metric of metricsFormArray.controls; let i = index" [formGroupName]="i">
+              <mat-card style="margin-bottom: 20px;">
+                <mat-card-title>Metric {{ i + 1 }}</mat-card-title>
+                <mat-card-content>
+                  <mat-form-field appearance="outline">
+                    <mat-label>File System Type</mat-label>
+                    <mat-select formControlName="fileSystemType">
+                      <mat-option *ngFor="let type of fileSystemTypes" [value]="type">
+                        {{ type }}
+                      </mat-option>
+                    </mat-select>
+                  </mat-form-field>
+  
+                  <mat-form-field appearance="outline">
+                    <mat-label>Alert Type</mat-label>
+                    <mat-select formControlName="alertType">
+                      <mat-option *ngFor="let type of alertTypes" [value]="type">
+                        {{ type }}
+                      </mat-option>
+                    </mat-select>
+                  </mat-form-field>
+  
+                  <mat-form-field appearance="outline" *ngIf="metric.get('alertType')?.value === 'email'">
+                    <mat-label>Email</mat-label>
+                    <input matInput formControlName="email" />
+                  </mat-form-field>
+  
+                  <mat-form-field appearance="outline" *ngIf="metric.get('alertType')?.value === 'slack'">
+                    <mat-label>Slack Webhook</mat-label>
+                    <input matInput formControlName="slack" />
+                  </mat-form-field>
+  
+                  <mat-form-field appearance="outline">
+                    <mat-label>Condition</mat-label>
+                    <mat-select formControlName="condition">
+                      <mat-option *ngFor="let condition of conditions" [value]="condition">
+                        {{ condition }}
+                      </mat-option>
+                    </mat-select>
+                  </mat-form-field>
+  
+                  <mat-form-field appearance="outline">
+                    <mat-label>Threshold</mat-label>
+                    <input matInput formControlName="threshold" />
+                    <mat-error *ngIf="metric.get('threshold')?.hasError('required')">
+                      Threshold is required.
+                    </mat-error>
+                    <mat-error *ngIf="metric.get('threshold')?.hasError('min') || metric.get('threshold')?.hasError('max')">
+                      Threshold must be between 1 and 99.
+                    </mat-error>
+                  </mat-form-field>
+  
+                  <mat-form-field appearance="outline">
+                    <mat-label>Mount Path</mat-label>
+                    <input matInput formControlName="mountPath" />
+                    <mat-error *ngIf="metric.get('mountPath')?.hasError('required')">
+                      Mount Path is required.
+                    </mat-error>
+                  </mat-form-field>
+  
+                  <button mat-raised-button color="warn" type="button" (click)="removeMetric(i)">
+                    Remove Metric
+                  </button>
+                </mat-card-content>
+              </mat-card>
+            </div>
+          </ng-container>
+  
+          <button mat-raised-button color="primary" type="button" (click)="addMetric()">
+            Add Metric
+          </button>
+  
+          <button mat-raised-button
