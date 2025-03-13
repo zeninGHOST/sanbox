@@ -467,4 +467,33 @@
             Add Metric
           </button>
   
-          <button mat-raised-button
+          <button mat-raised-button color="primary" type="submit" [disabled]="loading">
+            Submit
+          </button>
+  
+          <mat-spinner *ngIf="loading"></mat-spinner>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  
+    <mat-card style="flex: 1; margin-left: 20px;">
+      <mat-card-title>Metrics Mount Paths</mat-card-title>
+      <mat-card-content>
+        <ng-container formArrayName="metrics">
+          <div *ngFor="let metric of metricsFormArray.controls; let i = index" [formGroupName]="i">
+            <mat-card-title>Metric {{ i + 1 }} Mount Path</mat-card-title>
+            <mat-card-content>
+              <mat-list>
+                <mat-list-item
+                  *ngIf="metric.get('mountPath')?.value"
+                  style="cursor: pointer;"
+                >
+                  {{ metric.get('mountPath')?.value }}
+                </mat-list-item>
+              </mat-list>
+            </mat-card-content>
+          </div>
+        </ng-container>
+      </mat-card-content>
+    </mat-card>
+  </div>
