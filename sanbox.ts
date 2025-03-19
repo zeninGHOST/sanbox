@@ -931,3 +931,113 @@ import { MetricDialogComponent } from '../metric-dialog/metric-dialog.component'
 
 // ... (rest of the component code)
   // import the new component in the module.ts
+  //
+  //
+  // update 7
+// search-app.component.ts
+import { Component, ViewChild } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { AppService } from '../app.service';
+import { MatTableDataSource } from '@angular/material/table';
+import { MatPaginator } from '@angular/material/paginator';
+import { MatSort } from '@angular/material/sort';
+import { MatDialog } from '@angular/material/dialog';
+import { MetricDialogComponent } from '../metric-dialog/metric-dialog.component';
+import { delay, of } from 'rxjs'; // Import delay and of for testing
+
+interface SearchResult {
+  appId: string;
+  envType: string;
+  metrics: {
+    fileSystemType: string;
+    alertType: string;
+    email?: string;
+    slack?: string;
+    condition: string;
+    threshold: number;
+    mountPath: string;
+  };
+}
+
+@Component({
+  selector: 'app-search-app',
+  templateUrl: './search-app.component.html',
+  styleUrls: ['./search-app.component.css'],
+})
+export class SearchAppComponent {
+  searchForm: FormGroup;
+  searchResults: SearchResult | null = null;
+  displayedColumns: string= ['fileSystemType', 'alertType', 'email', 'slack', 'condition', 'threshold', 'mountPath'];
+  dataSource: MatTableDataSource<any>;
+  isLoading = false; // Add loading indicator flag
+  selectedIndex = 0; // Track selected tab
+
+  @ViewChild(MatPaginator) paginator: MatPaginator;
+  @ViewChild(MatSort) sort: MatSort;
+
+  constructor(private fb: FormBuilder, private appService: AppService, public dialog: MatDialog) {
+    this.searchForm = this.fb.group({
+      appId: ['', Validators.required],
+      envType: ['', Validators.required],
+    });
+  }
+
+  searchApp() {
+    if (this.searchForm.valid) {
+      this.isLoading = true; // Show loading indicator
+      const appId = this.searchForm.value.appId;
+      const envType = this.searchForm.value.envType;
+
+      // Simulate service call (replace with actual service call)
+      of(null)
+        .pipe(delay(1000)) // Simulate 1 second delay
+        .subscribe(() => {
+          const mockResult: SearchResult = {
+            appId: appId,
+            envType: envType,
+            metrics: [
+              { fileSystemType: 'ext4', alertType: 'email', email: 'test1@example.com', condition: '>', threshold: 80, mountPath: '/data1' },
+              { fileSystemType: 'xfs', alertType: 'slack', slack: 'slack-webhook-url1', condition: '<', threshold: 50, mountPath: '/logs1' },
+              { fileSystemType: 'ext4', alertType: 'both', email: 'test2@example.com', slack: 'slack-webhook-url2', condition: '=', threshold: 90, mountPath: '/data2' },
+              { fileSystemType: 'nfs', alertType: 'email', email: 'test3@example.com', condition: '>', threshold: 70, mountPath: '/data3' },
+              { fileSystemType: 'xfs', alertType: 'slack', slack: 'slack-webhook-url3', condition: '<', threshold: 60, mountPath: '/logs3' },
+            ],
+          };
+
+          console.log('Searching for app:', appId, envType);
+          console.log('Mock search result:', mockResult);
+
+          this.searchResults = mockResult;
+          this.dataSource = new MatTableDataSource(this.searchResults.metrics);
+          this.dataSource.paginator = this.paginator;
+          this.dataSource.sort = this.sort;
+          this.isLoading = false; // Hide loading indicator
+          this.selectedIndex = 1; // Navigate to the second tab
+        },
+        (error) => {
+          console.error('Error fetching data:', error);
+          this.isLoading = false; // Hide loading indicator (even on error)
+          // Handle the error appropriately (e.g., show a message to the user)
+        });
+    }
+  }
+
+  applyFilter(event: Event) {
+    const filterValue = (event.target as HTMLInputElement).value;
+    this.dataSource.filter = filterValue.trim().toLowerCase();
+  }
+
+  openDialog(row: any) {
+    const dialogRef = this.dialog.open(MetricDialogComponent, {
+      width: '500px',
+      data: row,
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        console.log('Updated metric:', result);
+        // Implement service call to update data
+      }
+    });
+  }
+}
