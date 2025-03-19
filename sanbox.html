@@ -545,3 +545,127 @@
     </mat-card>
   
     </div>
+   
+    <-- update 6--> 
+    <mat-card style="width: 100%;">
+  <mat-card-title>Search Application</mat-card-title>
+  <mat-card-content>
+    <form [formGroup]="searchForm">
+      <div style="display: flex; flex-wrap: wrap;">
+        <div style="flex: 1; min-width: 300px; padding-right: 10px;">
+          <mat-form-field appearance="outline" style="width: 100%;">
+            <mat-label>App ID</mat-label>
+            <input matInput formControlName="appId" />
+          </mat-form-field>
+        </div>
+        <div style="flex: 1; min-width: 300px; padding-left: 10px;">
+          <mat-form-field appearance="outline" style="width: 100%;">
+            <mat-label>Environment Type</mat-label>
+            <mat-select formControlName="envType">
+              <mat-option value="dev">dev</mat-option>
+              <mat-option value="test">test</mat-option>
+              <mat-option value="prod">prod</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+      </div>
+      <button mat-raised-button color="primary" (click)="searchApp()">Search</button>
+    </form>
+
+    <div *ngIf="searchResults">
+      <h2>Search Results</h2>
+      <p><strong>App ID:</strong> {{ searchResults.appId }}</p>
+      <p><strong>Environment:</strong> {{ searchResults.envType }}</p>
+
+      <mat-form-field>
+        <input matInput (keyup)="applyFilter($event)" placeholder="Filter">
+      </mat-form-field>
+
+      <table mat-table [dataSource]="dataSource" matSort style="width: 100%;">
+        <ng-container matColumnDef="fileSystemType">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> File System Type </th>
+          <td mat-cell *matCellDef="let element"> {{element.fileSystemType}} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="alertType">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> Alert Type </th>
+          <td mat-cell *matCellDef="let element"> {{element.alertType}} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="email">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> Email </th>
+          <td mat-cell *matCellDef="let element"> {{element.email}} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="slack">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> Slack </th>
+          <td mat-cell *matCellDef="let element"> {{element.slack}} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="condition">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> Condition </th>
+          <td mat-cell *matCellDef="let element"> {{element.condition}} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="threshold">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> Threshold </th>
+          <td mat-cell *matCellDef="let element"> {{element.threshold}} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="mountPath">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> Mount Path </th>
+          <td mat-cell *matCellDef="let element"> {{element.mountPath}} </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;" (click)="openDialog(row)" style="cursor: pointer;" class="mat-row-hover"></tr>
+      </table>
+
+      <mat-paginator [pageSizeOptions]="[5, 10, 25, 100]"></mat-paginator>
+    </div>
+  </mat-card-content>
+</mat-card>
+
+
+<--  metric-dialog.component.html  -->
+<h2 mat-dialog-title>Update Metric</h2>
+<mat-dialog-content>
+  <form [formGroup]="metricForm">
+    <mat-form-field appearance="outline">
+      <mat-label>File System Type</mat-label>
+      <input matInput formControlName="fileSystemType">
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Alert Type</mat-label>
+      <mat-select formControlName="alertType">
+        <mat-option value="email">email</mat-option>
+        <mat-option value="slack">slack</mat-option>
+        <mat-option value="both">both</mat-option>
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Email</mat-label>
+      <input matInput formControlName="email">
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Slack</mat-label>
+      <input matInput formControlName="slack">
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Condition</mat-label>
+      <input matInput formControlName="condition">
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Threshold</mat-label>
+      <input matInput formControlName="threshold">
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Mount Path</mat-label>
+      <input matInput formControlName="mountPath">
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions>
+  <button mat-button (click)="onCancelClick()">Cancel</button>
+  <button mat-button [mat-dialog-close]="metricForm.value" cdkFocusInitial>Submit</button>
+</mat-dialog-actions>
