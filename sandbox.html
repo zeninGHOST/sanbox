@@ -1,0 +1,79 @@
+<!-metric-dialog.component.html ->
+<h2 mat-dialog-title>{{ isUpdate ? 'Update Metric' : 'Create Metric' }}</h2>
+<mat-dialog-content>
+  <form [formGroup]="metricForm">
+    <mat-form-field appearance="outline">
+      <mat-label>File System Type</mat-label>
+      <mat-select formControlName="fileSystemType">
+        <mat-option value="ext4">ext4</mat-option>
+        <mat-option value="xfs">xfs</mat-option>
+        <mat-option value="nfs">nfs</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Alert Type</mat-label>
+      <mat-select formControlName="alertType">
+        <mat-option value="email">email</mat-option>
+        <mat-option value="slack">slack</mat-option>
+        <mat-option value="both">both</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Email</mat-label>
+      <input matInput formControlName="email">
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Slack</mat-label>
+      <input matInput formControlName="slack">
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Condition</mat-label>
+      <mat-select formControlName="condition">
+        <mat-option value=">">&gt;</mat-option>
+        <mat-option value="<">&lt;</mat-option>
+        <mat-option value="=">=</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Threshold</mat-label>
+      <input matInput formControlName="threshold">
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Mount Path</mat-label>
+      <input matInput formControlName="mountPath">
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions>
+  <button mat-button (click)="onCancelClick()">Cancel</button>
+  <button mat-button [mat-dialog-close]="metricForm.value" cdkFocusInitial>{{ isUpdate ? 'Update' : 'Create' }}</button>
+</mat-dialog-actions>
+
+
+<!- search-app.component.html ->
+
+
+<mat-tab label="Results" [disabled]="!searchResults">
+    <div *ngIf="searchResults">
+      <h2>Search Results</h2>
+      <p><strong>App ID:</strong> {{ searchResults.appId }}</p>
+      <p><strong>Environment:</strong> {{ searchResults.envType }}</p>
+
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <mat-form-field style="width: 25%;">
+          <input matInput (keyup)="applyFilter($event)" placeholder="Filter">
+        </mat-form-field>
+        <button mat-raised-button color="primary" (click)="openDialog()" style="margin-left: auto;">Create Metric</button>
+      </div>
+
+      <table mat-table [dataSource]="dataSource" matSort style="width: 100%;">
+        </table>
+      <mat-paginator [pageSizeOptions]="[5, 10, 25, 100]"></mat-paginator>
+    </div>
+  </mat-tab>
