@@ -784,3 +784,17 @@
     Invalid Linux path
   </mat-error>
 </mat-form-field>
+
+<mat-form-field appearance="outline">
+  <mat-label>App ID</mat-label>
+  <input matInput formControlName="appId">
+  <mat-error *ngIf="searchForm.get('appId')?.hasError('required')">
+    App ID is required
+  </mat-error>
+  <mat-error *ngIf="searchForm.get('appId')?.hasError('invalidAppId')">
+    Invalid App ID
+  </mat-error>
+  <mat-error *ngIf="searchForm.get('appId')?.pending">
+    Validating App ID...
+  </mat-error>
+</mat-form-field>

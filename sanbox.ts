@@ -1102,3 +1102,68 @@ export class MetricDialogComponent implements OnInit {
 
   // ... rest of the component
 }
+
+
+
+
+// app-id.validator.ts
+import { AbstractControl, AsyncValidatorFn, ValidationErrors } from '@angular/forms';
+import { Observable, of, map, catchError, delay } from 'rxjs';
+import { AppService } from './app.service'; // Import your AppService
+
+export function appIdValidator(appService: AppService): AsyncValidatorFn {
+  return (control: AbstractControl): Observable<ValidationErrors | null> => {
+    const appId = control.value;
+
+    if (!appId) {
+      return of(null); // Don't validate if the field is empty
+    }
+
+    return appService.validateAppId(appId).pipe( // Use your AppService method
+      map((isValid: boolean) => {
+        return isValid ? null : { invalidAppId: true };
+      }),
+      catchError(() => of({ invalidAppId: true })), // Handle errors from the service
+      delay(500) // Simulate delay from a real API call (optional)
+    );
+  };
+}
+
+
+// search-app.component.ts
+import { Component } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { AppService } from './app.service';
+import { appIdValidator } from './app-id.validator'; // Import the custom validator
+
+@Component({
+  // ... component metadata
+})
+export class SearchAppComponent {
+  searchForm: FormGroup;
+  searchResults: any;
+  loadingSearch = false;
+
+  constructor(private fb: FormBuilder, private appService: AppService) {
+    this.searchForm = this.fb.group({
+      appId: ['', [Validators.required], [appIdValidator(this.appService)]], // Use the custom validator
+      envType: ['dev', Validators.required],
+    });
+  }
+
+  // ... rest of the component
+}
+
+// app.service.ts
+import { Injectable } from '@angular/core';
+import { Observable, of, delay } from 'rxjs';
+
+@Injectable({
+  providedIn: 'root',
+})
+export class AppService {
+  validateAppId(appId: string): Observable<boolean> {
+    // Simulate API call to validate app ID
+    return of(appId === 'validAppId').pipe(delay(500)); // Replace with actual API call
+  }
+}
