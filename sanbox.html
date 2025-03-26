@@ -772,4 +772,15 @@
     </mat-tab-group>
   </mat-card-content>
 </mat-card>
+<! update 9  >
 
+<mat-form-field appearance="outline">
+  <mat-label>Mount Path</mat-label>
+  <input matInput formControlName="mountPath">
+  <mat-error *ngIf="metricForm.get('mountPath')?.hasError('required')">
+    Mount path is required
+  </mat-error>
+  <mat-error *ngIf="metricForm.get('mountPath')?.hasError('invalidLinuxPath')">
+    Invalid Linux path
+  </mat-error>
+</mat-form-field>

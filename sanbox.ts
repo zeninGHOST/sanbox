@@ -1041,3 +1041,64 @@ export class SearchAppComponent {
     });
   }
 }
+
+
+
+/* update 9*/
+// linux-path.validator.ts
+import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
+
+export function linuxPathValidator(): ValidatorFn {
+  return (control: AbstractControl): ValidationErrors | null => {
+    const path = control.value;
+    if (!path) {
+      return null; // Don't validate if the field is empty
+    }
+
+    // Basic Linux path validation regex
+    const linuxPathRegex = /^(\/([a-zA-Z0-9_\-\.]+))*(\/?)$/;
+
+    if (!linuxPathRegex.test(path)) {
+      return { invalidLinuxPath: true };
+    }
+
+    return null;
+  };
+}
+
+
+
+// metric-dialog.component.ts
+import { Component, Inject, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { linuxPathValidator } from '../linux-path.validator'; // Import the custom validator
+
+@Component({
+  // ... component metadata
+})
+export class MetricDialogComponent implements OnInit {
+  metricForm: FormGroup;
+  isUpdate: boolean;
+  originalData: any;
+
+  constructor(
+    public fb: FormBuilder,
+    public dialogRef: MatDialogRef<MetricDialogComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: any
+  ) {
+    this.isUpdate = !!data;
+    this.originalData = { ...data };
+    this.metricForm = this.fb.group({
+      fileSystemType: [data?.fileSystemType || '', Validators.required],
+      alertType: [data?.alertType || '', Validators.required],
+      email: [data?.email || ''],
+      slack: [data?.slack || ''],
+      condition: [data?.condition || '', Validators.required],
+      threshold: [data?.threshold || '', [Validators.required, Validators.min(1), Validators.max(99)]],
+      mountPath: [data?.mountPath || '', [Validators.required, linuxPathValidator()]], // Use the custom validator
+    });
+  }
+
+  // ... rest of the component
+}
