@@ -798,3 +798,31 @@
     Validating App ID...
   </mat-error>
 </mat-form-field>
+
+
+<!-- update 11 -->
+
+<h2 mat-dialog-title>{{ isUpdate ? 'Update Metric' : 'Create Metric' }}</h2>
+<mat-dialog-content>
+  <form [formGroup]="metricForm">
+    </form>
+</mat-dialog-content>
+<mat-dialog-actions>
+  <button mat-button (click)="onCancelClick()">Cancel</button>
+  <button mat-button *ngIf="isUpdate" color="warn" (click)="onDeleteClick()">Delete</button>
+  <button mat-button [mat-dialog-close]="metricForm.value" cdkFocusInitial [disabled]="!hasChanges()">{{ isUpdate ? 'Update' : 'Create' }}</button>
+</mat-dialog-actions>
+
+
+<h2 mat-dialog-title>{{ isUpdate ? 'Update Metric' : 'Create Metric' }}</h2>
+<mat-dialog-content>
+  <form [formGroup]="metricForm">
+    </form>
+</mat-dialog-content>
+<mat-dialog-actions style="display: flex; justify-content: space-between;">
+  <button mat-button *ngIf="isUpdate" color="warn" (click)="onDeleteClick()">Delete</button>
+  <div>
+    <button mat-button (click)="onCancelClick()">Cancel</button>
+    <button mat-button [mat-dialog-close]="metricForm.value" cdkFocusInitial [disabled]="!hasChanges()">{{ isUpdate ? 'Update' : 'Create' }}</button>
+  </div>
+</mat-dialog-actions>
