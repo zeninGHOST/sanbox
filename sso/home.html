@@ -1,0 +1,20 @@
+<div style="padding: 15px; border: 1px solid #ccc; border-radius: 5px; background-color: #f9f9f9;">
+  <h2>Home Component (Protected Route)</h2>
+
+  <p *ngIf="currentUser">
+    You are logged in! This content is only visible after successful authentication via Azure AD.
+  </p>
+
+  <div *ngIf="currentUser">
+    <h3>User Details:</h3>
+    <ul>
+      <li><strong>Username:</strong> {{ currentUser.username }}</li>
+      <li><strong>Name:</strong> {{ currentUser.name }}</li>
+      </ul>
+  </div>
+
+  <p *ngIf="!currentUser">
+    Loading user information or user not fully logged in...
+  </p>
+</div>
+
