@@ -1,135 +1,153 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
-import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http'; // Import HttpClientModule
+import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 
-// Import MSAL modules
+// Import MSAL v1 modules
 import {
-  MsalModule,
-  MsalInterceptor,
-  MSAL_INSTANCE,
-  MSAL_INTERCEPTOR_CONFIG,
-  MsalInterceptorConfiguration,
-  MsalGuardConfiguration,
-  MSAL_GUARD_CONFIG,
-  MsalGuard, // Import MsalGuard
-  MsalBroadcastService, // Import MsalBroadcastService
-  MsalService // Import MsalService
-} from '@azure/msal-angular';
-import {
-  PublicClientApplication, // Updated import
-  InteractionType, // Needed for interceptor config
-  BrowserCacheLocation // Optional: For cache configuration
-} from '@azure/msal-browser'; // Use @azure/msal-browser for configuration objects
+    MsalModule,
+    MsalInterceptor,
+    MSAL_CONFIG, // Use MSAL_CONFIG for v1
+    MSAL_CONFIG_ANGULAR, // Use MSAL_CONFIG_ANGULAR for v1
+    MsalService,
+    MsalGuard,
+    MsalBroadcastService // Still used in v1 for broadcasting events
+} from '@azure/msal-angular'; // v1 uses @azure/msal-angular
+import { Configuration } from 'msal'; // Import Configuration from 'msal' v1
+import { MsalAngularConfiguration } from '@azure/msal-angular'; // Import MsalAngularConfiguration
 
-import { HomeComponent } from './home/home.component'; // Assuming you have a HomeComponent
+import { HomeComponent } from './home/home.component';
+import { LogLevel } from 'msal'; // Import LogLevel from 'msal' v1
 
-// --- MSAL Configuration ---
-// This function creates the MSAL instance.
-// You MUST replace placeholders with your actual Azure AD app registration details.
-export function MSALInstanceFactory(): PublicClientApplication {
-  return new PublicClientApplication({
+// --- MSAL v1 Configuration ---
+
+// MSAL Core Configuration (msal.js)
+export function MSALConfigFactory(): Configuration {
+  return {
     auth: {
       // REQUIRED: 'Application (client) ID' of your app registration in Azure portal
       clientId: 'YOUR_CLIENT_ID', // <-- REPLACE THIS
       // OPTIONAL: 'Directory (tenant) ID' or common/organizations/consumers
-      // 'common' allows work/school accounts and personal Microsoft accounts
       authority: 'https://login.microsoftonline.com/YOUR_TENANT_ID', // <-- REPLACE THIS or use 'common'/'organizations'
       // REQUIRED: Must match the 'Redirect URI' configured in your Azure app registration
       redirectUri: 'http://localhost:4200', // Default Angular dev server port
-      // OPTIONAL: Only needed for single-page apps using hash routing
-      // navigateToLoginRequestUrl: false,
+      // OPTIONAL: The URI to redirect to after logout
+      postLogoutRedirectUri: 'http://localhost:4200',
+      // OPTIONAL: Used to indicate that navigation to the login request URL is handled by the developer. Set to true to prevent looping.
+      navigateToLoginRequestUrl: true,
     },
     cache: {
-      // OPTIONAL: Configures cache location. 'localStorage' is default.
-      cacheLocation: BrowserCacheLocation.LocalStorage,
-      // OPTIONAL: Prevent clearing cache on redirect. Useful for debugging.
-      // storeAuthStateInCookie: isIE, // Set to true for Internet Explorer 11
+      // Configures cache location. 'localStorage' is default.
+      cacheLocation: 'localStorage', // Options: 'localStorage', 'sessionStorage'
+      // Set to true if you want navigation prompts to wait for MSAL operations to complete
+      storeAuthStateInCookie: false, // Set to true for IE11 issues, generally false
     },
+    // OPTIONAL: Log details for debugging
     system: {
-      loggerOptions: { // OPTIONAL: For detailed MSAL logging
-        loggerCallback: (level, message, containsPii) => {
-          if (containsPii) {
-            return;
-          }
-          // console.log('MSAL Log:', level, message); // Uncomment to see MSAL logs
-        },
-        piiLoggingEnabled: false,
-        logLevel: 'Verbose', // LogLevel.Verbose
-      }
-    }
-  });
-}
-
-// This function configures the MSAL Interceptor.
-// It automatically attaches access tokens to outgoing HTTP requests to protected resources.
-export function MSALInterceptorConfigFactory(): MsalInterceptorConfiguration {
-  // Define the scopes required for your protected API resources.
-  // Example: If you have an API registered in Azure AD, add its scope here.
-  // For Microsoft Graph, use scopes like 'user.read'.
-  const protectedResourceMap = new Map<string, Array<string>>();
-  // Example for Microsoft Graph:
-  // protectedResourceMap.set('https://graph.microsoft.com/v1.0/me', ['user.read']);
-  // Example for a custom API:
-  // protectedResourceMap.set('https://yourapi.domain.com/api', ['api://YOUR_API_CLIENT_ID/your.scope']);
-
-  return {
-    interactionType: InteractionType.Redirect, // Or InteractionType.Popup
-    protectedResourceMap
-  };
-}
-
-// This function configures the MSAL Guard.
-// It protects routes, ensuring the user is authenticated before accessing them.
-export function MSALGuardConfigFactory(): MsalGuardConfiguration {
-  return {
-    interactionType: InteractionType.Redirect, // Or InteractionType.Popup
-    authRequest: {
-      // Scopes required just for login. 'openid', 'profile', 'User.Read' are common defaults.
-      scopes: ['user.read']
+      logger: new Logger(loggerCallback, {
+         correlationId: '1234', // Example correlation ID
+         level: LogLevel.Verbose, // Log levels: Error, Warning, Info, Verbose
+         piiLoggingEnabled: false // Set to true ONLY for debugging, logs personal info
+        })
     }
   };
 }
-// --- End MSAL Configuration ---
+
+// MSAL Angular Configuration (msal-angular)
+export function MSALAngularConfigFactory(): MsalAngularConfiguration {
+  return {
+    // Scopes for initial login request. These are consented upfront.
+    consentScopes: [
+      'user.read', // Basic profile access
+      'openid',
+      'profile',
+      // Add other scopes needed for your application immediately after login
+      // e.g., 'api://YOUR_API_CLIENT_ID/your.scope'
+    ],
+    // Scopes to protect resources. The interceptor attaches tokens with these scopes.
+    // Keys are the resource endpoints (can be partial URLs), values are the scopes.
+    protectedResourceMap: new Map<string, Array<string>>([
+      // Example for Microsoft Graph:
+      ['https://graph.microsoft.com/v1.0/me', ['user.read']],
+      // Example for a custom API:
+      // ['https://yourapi.domain.com/api', ['api://YOUR_API_CLIENT_ID/your.scope']]
+    ]),
+    // Set to true for handling specific AAD B2C user flows (optional)
+    // isAngular: true, // Deprecated in later v1 versions, usually not needed
+    // URL patterns to *exclude* from automatic token acquisition by the interceptor
+    unprotectedResources: [
+        'https://www.microsoft.com/en-us/.' // Example: Exclude external URLs
+    ],
+    // Extra query parameters for authentication requests (optional)
+    // extraQueryParameters: { domain_hint: 'organizations' }
+  };
+}
+
+// MSAL Logger Callback Function
+export function loggerCallback(logLevel: LogLevel, message: string, piiLoggingEnabled: boolean) {
+    // console.log('MSAL Log:', LogLevel[logLevel], message); // Uncomment to see MSAL logs
+}
+
+// Custom Logger class required by MSAL v1 Configuration
+export class Logger {
+    constructor(
+        private callback: (level: LogLevel, message: string, containsPii: boolean) => void,
+        private options: { level: LogLevel, piiLoggingEnabled: boolean, correlationId?: string }
+    ) {}
+
+    error(message: string): void {
+        if (this.options.level >= LogLevel.Error) {
+            this.callback(LogLevel.Error, message, this.options.piiLoggingEnabled);
+        }
+    }
+    warning(message: string): void {
+         if (this.options.level >= LogLevel.Warning) {
+            this.callback(LogLevel.Warning, message, this.options.piiLoggingEnabled);
+        }
+    }
+    info(message: string): void {
+         if (this.options.level >= LogLevel.Info) {
+            this.callback(LogLevel.Info, message, this.options.piiLoggingEnabled);
+        }
+    }
+    verbose(message: string): void {
+         if (this.options.level >= LogLevel.Verbose) {
+            this.callback(LogLevel.Verbose, message, this.options.piiLoggingEnabled);
+        }
+    }
+    // Implement other methods if needed based on MSAL's internal logger interface
+    isPiiLoggingEnabled(): boolean {
+        return this.options.piiLoggingEnabled;
+    }
+}
+// --- End MSAL v1 Configuration ---
 
 
 @NgModule({
   declarations: [
     AppComponent,
-    HomeComponent // Declare HomeComponent
+    HomeComponent
   ],
   imports: [
     BrowserModule,
     AppRoutingModule,
-    HttpClientModule, // Add HttpClientModule
-    MsalModule // Add MsalModule here
+    HttpClientModule,
+    // Initialize MsalModule with the factories
+    MsalModule.forRoot(MSALConfigFactory(), MSALAngularConfigFactory())
   ],
   providers: [
-    // MSAL Interceptor
+    // MSAL Interceptor for attaching tokens
     {
       provide: HTTP_INTERCEPTORS,
       useClass: MsalInterceptor,
       multi: true
     },
-    // MSAL Instance, Interceptor Config, Guard Config
-    {
-      provide: MSAL_INSTANCE,
-      useFactory: MSALInstanceFactory
-    },
-    {
-      provide: MSAL_INTERCEPTOR_CONFIG,
-      useFactory: MSALInterceptorConfigFactory
-    },
-    {
-      provide: MSAL_GUARD_CONFIG,
-      useFactory: MSALGuardConfigFactory
-    },
-    // MSAL Services
+    // MSAL Services are now provided by MsalModule.forRoot()
     MsalService,
-    MsalGuard, // Provide MsalGuard
-    MsalBroadcastService // Provide MsalBroadcastService
+    MsalGuard,
+    MsalBroadcastService
   ],
   bootstrap: [AppComponent]
 })
