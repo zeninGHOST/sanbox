@@ -332,3 +332,36 @@ export class CustomErrorDialogComponent {
     this.dialogRef.close();
   }
 }
+
+
+
+
+
+parseMetricErrors(metricErrors: BackendMetricErrors): void {
+  this.detailedErrors = [];
+  for (const metricIndex in metricErrors) {
+    if (metricErrors.hasOwnProperty(metricIndex)) {
+      const parsedIndex = parseInt(metricIndex, 10);
+      if (!isNaN(parsedIndex)) { // Check if metricIndex is a valid number
+        const fieldErrors = metricErrors[metricIndex];
+        for (const field in fieldErrors) {
+          if (fieldErrors.hasOwnProperty(field)) {
+            const errorValue = fieldErrors[field];
+            if (Array.isArray(errorValue)) {
+              this.detailedErrors.push(`Metric ${parsedIndex + 1}, Field '${field}': ${errorValue.join(', ')}`);
+            } else if (typeof errorValue === 'string') {
+              this.detailedErrors.push(`Metric ${parsedIndex + 1}, Field '${field}': ${errorValue}`);
+            } else {
+              this.detailedErrors.push(`Metric ${parsedIndex + 1}, Field '${field}': Unknown error format`);
+            }
+          }
+        }
+      } else {
+        console.warn(`Invalid metric index encountered: ${metricIndex}`);
+        // Optionally, you could add a generic error message for invalid indices
+        // this.detailedErrors.push(`Invalid Metric Index: ${metricIndex}, Error: Unknown format`);
+      }
+    }
+  }
+  this.errorMessage = 'Please correct the following errors:';
+}
