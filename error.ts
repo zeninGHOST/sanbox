@@ -268,3 +268,67 @@ export class SearchAppComponent {
     });
   }
 }
+
+
+
+
+/////////////////////////
+// custom-error-dialog.component.ts
+import { Component, Inject } from '@angular/core';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { BackendError, BackendMetricErrors } from '../error.model';
+
+@Component({
+  selector: 'app-custom-error-dialog',
+  templateUrl: './custom-error-dialog.component.html',
+  styleUrls: ['./custom-error-dialog.component.css'],
+})
+export class CustomErrorDialogComponent {
+  errorMessage: string = '';
+  detailedErrors: string[] = [];
+
+  constructor(
+    public dialogRef: MatDialogRef<CustomErrorDialogComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: BackendError
+  ) {
+    this.parseErrorMessage(data);
+  }
+
+  parseErrorMessage(errorData: BackendError): void {
+    if (errorData?.error && typeof errorData.error === 'string') {
+      this.errorMessage = errorData.message || 'An unexpected error occurred.';
+    } else if (errorData?.error && typeof errorData.error === 'object') {
+      this.parseMetricErrors(errorData.error as BackendMetricErrors);
+    } else if (errorData?.message) {
+      this.errorMessage = errorData.message;
+    } else {
+      this.errorMessage = 'An unexpected error occurred.';
+    }
+  }
+
+  parseMetricErrors(metricErrors: BackendMetricErrors): void {
+    this.detailedErrors = [];
+    for (const metricIndex in metricErrors) {
+      if (metricErrors.hasOwnProperty(metricIndex)) {
+        const fieldErrors = metricErrors[metricIndex];
+        for (const field in fieldErrors) {
+          if (fieldErrors.hasOwnProperty(field)) {
+            const errorValue = fieldErrors[field];
+            if (Array.isArray(errorValue)) {
+              this.detailedErrors.push(`Metric ${parseInt(metricIndex) + 1}, Field '${field}': ${errorValue.join(', ')}`);
+            } else if (typeof errorValue === 'string') {
+              this.detailedErrors.push(`Metric ${parseInt(metricIndex) + 1}, Field '${field}': ${errorValue}`);
+            } else {
+              this.detailedErrors.push(`Metric ${parseInt(metricIndex) + 1}, Field '${field}': Unknown error format`);
+            }
+          }
+        }
+      }
+    }
+    this.errorMessage = 'Please correct the following errors:';
+  }
+
+  onCloseClick(): void {
+    this.dialogRef.close();
+  }
+}
