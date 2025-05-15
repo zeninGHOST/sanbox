@@ -165,3 +165,85 @@ app.config['SWAGGER'] = {
 swagger = Swagger(app) # Initialize after setting app.config['SWAGGER']
 
 # ... your routes ...
+
+
+
+
+############################################################################################
+
+# In your app.py
+
+# ... (Flask app initialization and other SWAGGER config remains the same) ...
+
+app.config['SWAGGER'] = {
+    'title': 'My CRUD API (Flask 1.1.2 + Flasgger 0.9.7.1)',
+    'version': '1.0.0',
+    'uiversion': 3,
+    'description': 'A simple CRUD API with header token authentication for certain endpoints.',
+    # ... (termsOfService, contact, license, securityDefinitions as before) ...
+    'securityDefinitions': {
+        'ApiKeyAuth': {
+            'type': 'apiKey',
+            'in': 'header',
+            'name': 'x-auth-token'
+        }
+    },
+    'definitions': {
+        'Item': { # This definition is now used for items within the new payload too
+            'type': 'object',
+            'properties': {
+                'id': {
+                    'type': 'integer',
+                    'description': 'The unique identifier of the item (client-provided in this context).',
+                    'example': 1
+                },
+                'name': {
+                    'type': 'string',
+                    'description': 'The name of the item.',
+                    'example': 'Item 1 from Batch'
+                },
+                'description': {
+                    'type': 'string',
+                    'description': 'A description of the item.',
+                    'example': 'Short description for item 1.'
+                }
+            },
+            'required': ['id', 'name'] # Assuming id and name are required for each item in the list
+        },
+        'CreateItemsPayload': { # <<< NEW DEFINITION for the complex request body
+            'type': 'object',
+            'properties': {
+                'appid': {
+                    'type': 'string',
+                    'description': 'The application ID.',
+                    'example': 'app123'
+                },
+                'appenv': {
+                    'type': 'string',
+                    'description': 'The application environment.',
+                    'example': 'production'
+                },
+                'items': {
+                    'type': 'array',
+                    'description': 'A list of items to be created or processed.',
+                    'items': {
+                        '$ref': '#/definitions/Item' # Each item in the array uses the 'Item' schema
+                    }
+                }
+            },
+            'required': ['appid', 'appenv', 'items']
+        },
+        # 'NewItem' definition might be redundant now if not used by PUT, or PUT could also use 'Item'
+        # For simplicity, if PUT updates name/description for an existing ID, it might not need 'Item' schema in request.
+        # Let's assume PUT could still use a simpler schema or be adapted. The focus here is POST.
+        'Error': {
+            'type': 'object',
+            'properties': {
+                'message': {'type': 'string'}
+            }
+        }
+    }
+}
+swagger = Swagger(app)
+
+# ... (rest of your app.py: in-memory DB, token_required, other routes) ...
