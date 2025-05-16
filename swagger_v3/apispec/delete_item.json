@@ -1,0 +1,66 @@
+{
+    "responses": {
+      "200": {
+        "description": "Item deleted successfully",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "message": {"type": "string"},
+            "item": {
+              "type": "object",
+              "properties": {
+                "id": {"type": "integer"},
+                "name": {"type": "string"},
+                "description": {"type": "string"}
+              }
+            }
+          }
+        }
+      },
+      "400": {
+        "description": "Missing required parameters"
+      },
+      "401": {
+        "description": "Authentication failed"
+      },
+      "404": {
+        "description": "Item not found"
+      }
+    },
+    "parameters": [
+      {
+        "name": "Authorization",
+        "in": "header",
+        "type": "string",
+        "required": true,
+        "description": "Authorization header"
+      },
+      {
+        "name": "item_id",
+        "in": "path",
+        "type": "integer",
+        "required": true,
+        "description": "Item ID"
+      },
+      {
+        "name": "appid",
+        "in": "query",
+        "type": "string",
+        "required": true,
+        "description": "Application ID"
+      },
+      {
+        "name": "appenv",
+        "in": "query",
+        "type": "string",
+        "required": true,
+        "description": "Application Environment"
+      }
+    ],
+    "security": [{"Authorization": []}],
+    "tags": ["Items"],
+    "operationId": "deleteItem",
+    "summary": "Delete an item",
+    "description": "Deletes an existing item by ID for a specific application ID and environment"
+  }
+  
