@@ -1,0 +1,39 @@
+responses:
+  200:
+    description: Returns all items
+    schema:
+      type: object
+      properties:
+        appid:
+          type: string
+        appenv:
+          type: string
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              name:
+                type: string
+              description:
+                type: string
+  400:
+    description: Missing required parameters
+parameters:
+  - name: appid
+    in: query
+    type: string
+    required: true
+    description: Application ID
+  - name: appenv
+    in: query
+    type: string
+    required: true
+    description: Application Environment
+tags:
+  - Items
+operationId: getItems
+summary: Get all items for an application
+description: Returns all items for a specific application ID and environment

@@ -1,0 +1,64 @@
+responses:
+  201:
+    description: Item created successfully
+    schema:
+      type: object
+      properties:
+        message:
+          type: string
+        appid:
+          type: string
+        appenv:
+          type: string
+  400:
+    description: Invalid input
+  401:
+    description: Authentication failed
+parameters:
+  - name: Authorization
+    in: header
+    type: string
+    required: true
+    description: Authorization header
+  - name: body
+    in: body
+    required: true
+    schema:
+      type: object
+      properties:
+        appid:
+          type: string
+        appenv:
+          type: string
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              name:
+                type: string
+              description:
+                type: string
+            required:
+              - id
+              - name
+      required:
+        - appid
+        - appenv
+        - items
+      example:
+        appid: "ap123"
+        appenv: "production"
+        items:
+          - id: 1
+            name: "item 1"
+            description: "short description here"
+security:
+  - Authorization: []
+tags:
+  - Items
+operationId: createItems
+summary: Create new items
+description: Creates new items for a specific application ID and environment
