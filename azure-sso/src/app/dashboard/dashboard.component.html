@@ -1,0 +1,32 @@
+<div class="dashboard-container">
+  <header class="dashboard-header">
+    <h1>Welcome to your Dashboard</h1>
+    <button class="logout-btn" (click)="logout()">Logout</button>
+  </header>
+  
+  <div class="user-info-card" *ngIf="userInfo">
+    <h2>User Information</h2>
+    <div class="user-details">
+      <div class="detail-row">
+        <label>Name:</label>
+        <span>{{ userInfo.name || 'N/A' }}</span>
+      </div>
+      <div class="detail-row">
+        <label>Email:</label>
+        <span>{{ userInfo.email || 'N/A' }}</span>
+      </div>
+      <div class="detail-row">
+        <label>Username:</label>
+        <span>{{ userInfo.username || 'N/A' }}</span>
+      </div>
+      <div class="detail-row">
+        <label>User ID:</label>
+        <span>{{ userInfo.id || 'N/A' }}</span>
+      </div>
+    </div>
+  </div>
+  
+  <div class="no-user-info" *ngIf="!userInfo">
+    <p>No user information available. Please try logging in again.</p>
+  </div>
+</div>
